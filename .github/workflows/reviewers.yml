@@ -3,7 +3,7 @@ run-name: 'Manage Reviewers: ${{ github.event_name }}.${{ github.event.action }}
 on:
   pull_request:
     types:
-    - opened
+    - opened 
     - synchronize
     - ready_for_review
   pull_request_review:
