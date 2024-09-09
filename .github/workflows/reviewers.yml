@@ -1,4 +1,5 @@
 name: Manage Reviewers
+run-name: 'Manage Reviewers: ${{ github.event_name }}.${{ github.event.action }}'
 on:
   pull_request:
     types:
