@@ -1,0 +1,18 @@
+name: Manage Reviewers
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - ready_for_review
+  pull_request_review:
+jobs:
+  debugger:
+    runs-on: self-hosted
+    steps:
+      - run: |
+          echo '${{ toJSON(github.event.pull_request) }}' >> pull_request.json
+
+          echo 'users:'
+          jq '.requested_reviewers' pull_request.json
+          echo 'teams:'
+          jq '.requested_teams' pull_request.json
