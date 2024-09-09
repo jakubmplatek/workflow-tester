@@ -7,7 +7,7 @@ name: Manage Reviewers
   pull_request_review:
 jobs:
   debugger:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - run: |
           echo '${{ toJSON(github.event.pull_request) }}' >> pull_request.json
