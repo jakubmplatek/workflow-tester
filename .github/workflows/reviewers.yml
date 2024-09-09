@@ -22,5 +22,5 @@ jobs:
           echo '>>>>>> requested teams:'
           jq '.pull_request.requested_teams' event.json
           echo '>>>>>> new review:'
-          jq '.pull_request.review' event.json
+          jq '.review' event.json
           
