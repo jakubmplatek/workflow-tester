@@ -11,9 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo '${{ toJSON(github.event.pull_request) }}' >> pull_request.json
+          which gh
+      - run: |
+          echo '${{ toJSON(github.event) }}' >> event.json
 
-          echo 'users:'
-          jq '.requested_reviewers' pull_request.json
-          echo 'teams:'
-          jq '.requested_teams' pull_request.json
+          echo '>>>>>> requested users:'
+          jq '.pull_request.requested_reviewers' event.json
+          echo '>>>>>> requested teams:'
+          jq '.pull_request.requested_teams' event.json
+          echo '>>>>>> new review:'
+          jq '.pull_request.review' event.json
+          
