@@ -17,25 +17,60 @@ jobs:
           script: |
             // load event
             const pull_request = JSON.parse(`${{ toJSON(github.event.pull_request) }}`);
-            
-            console.debug(pull_request.requested_reviewers);
-            console.debug(pull_request.requested_teams);
 
             // read pull reviews
+            
+            /* 
+             * NOTE: this will include the one submitted in this event (if any)
+             * so at this point we're event-type-agnostic
+             */
+
             const reviews = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: '${{ github.event.pull_request.number }}'
+              pull_number: pull_request.number
             });
+            if (200 != reviews.status) {
+                throw `Failed to read reviews on Pull Request #${pull_request.number}`;
+            }
 
-            if (200 == reviews.status) {
-              let approved = [];
-              for (let review of reviews.data) {
-                if ('APPROVED' == review.state) {
-                  approved.push(review);
-                }
+            // collect approving reviews
+
+            const approvals = [];
+            for (let review of reviews.data) {
+              if ('APPROVED' == review.state) {
+                approvals.push(review);
               }
-              console.debug(approved);
-            } else {
-              throw 'Failed to read reviews on Pull Request #${{ github.event.pull_request.number }}';
+            }
+
+            console.debug(approvals);
+
+            // load configured reviewers
+
+            const reviewers = ['okratochvil_pure']; // TODO
+
+            // TODO: all below should iterate through approval stages
+            // need to design the config file to implement that
+
+            // check if the configured reviewers already approved
+            
+            const approved = reviewers.filter(u => approvals.map(r=>r.user.login).includes(u));
+            cosnole.debug(approved);
+            if (approved.length) {
+              // current review stage already approved - move along to the next one
+            }
+            // else
+
+            // check if the configured reviewers are already requested
+
+            /* 
+             * NOTE: the orgs/ORG/teams/* endpoints are not available using github.token
+             * so if any teams are requested, workflow might duplicate requests
+             * by adding members explicitly (minor issue)
+             */
+
+            const requested = reviewers.filter(u => pull_request.requested_reviewers.map(r=>r.login).includes(u));
+            console.debug(requested);
+            if (!requested.length) {
+              // no match requested for the current review stage
             }
