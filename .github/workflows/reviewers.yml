@@ -27,7 +27,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: '${{ github.event.pull_request.number }}'
             });
-            cosnole.debug(reviews);
+            console.debug(`${reviews}`);
             if (200 == reviews.status) {
               let approved = [];
               for (let review of reviews.data) {
