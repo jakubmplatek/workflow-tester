@@ -35,6 +35,7 @@ jobs:
                   approved.push(review);
                 }
               }
+              console.debug(approved);
             } else {
               throw 'Failed to read reviews on Pull Request #${{ github.event.pull_request.number }}';
             }
