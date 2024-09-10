@@ -1,0 +1,76 @@
+name: Manage Reviewers
+run-name: 'Manage Reviewers: ${{ github.event_name }}.${{ github.event.action }}'
+on:
+  pull_request:
+    types:
+      - ready_for_review
+  pull_request_review:
+jobs:
+  debugger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse pull request
+        # don't process non-approving review events
+        if: ${{ ! ( 'pull_request_review' == github.event_name && 'APPROVED' != github.event.review.state ) }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // load event
+            const pull_request = JSON.parse(`${{ toJSON(github.event.pull_request) }}`);
+
+            // read pull reviews
+            
+            /* 
+             * NOTE: this will include the one submitted in this event (if any)
+             * so at this point we're event-type-agnostic
+             */
+
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pull_request.number
+            });
+            if (200 != reviews.status) {
+                throw `Failed to read reviews on Pull Request #${pull_request.number}`;
+            }
+
+            // collect approving reviews
+
+            const approvals = [];
+            for (let review of reviews.data) {
+              if ('APPROVED' == review.state) {
+                approvals.push(review);
+              }
+            }
+
+            console.debug(approvals);
+
+            // load configured reviewers
+
+            const reviewers = ['prevision-cloud']; // TODO
+
+            // TODO: all below should iterate through approval stages
+            // need to design the config file to implement that
+
+            // check if the configured reviewers already approved
+            
+            const approved = reviewers.filter(u => approvals.map(r=>r.user.login).includes(u));
+            console.debug(approved);
+            if (approved.length) {
+              // current review stage already approved - move along to the next one
+            }
+            // else
+
+            // check if the configured reviewers are already requested
+
+            /* 
+             * NOTE: the orgs/ORG/teams/* endpoints are not available using github.token
+             * so if any teams are requested, workflow might duplicate requests
+             * by adding members explicitly (minor issue)
+             */
+
+            const requested = reviewers.filter(u => pull_request.requested_reviewers.map(r=>r.login).includes(u));
+            console.debug(requested);
+            if (!requested.length) {
+              // no match requested for the current review stage
+            }
