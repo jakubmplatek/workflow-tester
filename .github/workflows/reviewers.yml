@@ -55,7 +55,7 @@ jobs:
             // check if the configured reviewers already approved
             
             const approved = reviewers.filter(u => approvals.map(r=>r.user.login).includes(u));
-            cosnole.debug(approved);
+            console.debug(approved);
             if (approved.length) {
               // current review stage already approved - move along to the next one
             }
