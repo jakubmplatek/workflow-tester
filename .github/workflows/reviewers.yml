@@ -31,13 +31,10 @@ jobs:
             if (200 == reviews.status) {
               let approved = [];
               for (let review of reviews.data) {
-                console.debug(review);
-                if ('APPROVED' == review.status) {
+                if ('APPROVED' == review.state) {
                   approved.push(review);
                 }
-                console.debug(approved);
               }
-              console.debug(approved);
             } else {
               throw 'Failed to read reviews on Pull Request #${{ github.event.pull_request.number }}';
             }
