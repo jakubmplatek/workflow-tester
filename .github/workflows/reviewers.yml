@@ -27,15 +27,15 @@ jobs:
               repo: context.repo.repo,
               pull_number: '${{ github.event.pull_request.number }}'
             });
-            
-            console.debug(reviews);
-            
+
             if (200 == reviews.status) {
               let approved = [];
               for (let review of reviews.data) {
+                console.debug(review);
                 if ('APPROVED' == review.status) {
                   approved.push(review);
                 }
+                console.debug(approved);
               }
               console.debug(approved);
             } else {
