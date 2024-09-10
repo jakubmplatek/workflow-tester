@@ -10,18 +10,32 @@ on:
 jobs:
   debugger:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
-      - run: |
-          gh api /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews | jq '.'
-      - run: |
-          echo '${{ toJSON(github.event) }}' >> event.json
+      - name: Parse pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // load event
+            const pull_request = JSON.parse(`${{ toJSON(github.event.pull_request) }}`);
+            
+            console.debug(pull_request.requested_reviewers);
+            console.debug(pull_request.requested_teams);
 
-          echo '>>>>>> requested users:'
-          jq '.pull_request.requested_reviewers' event.json
-          echo '>>>>>> requested teams:'
-          jq '.pull_request.requested_teams' event.json
-          echo '>>>>>> new review:'
-          jq '.review' event.json
-          
+            // read pull reviews
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: '${{ github.event.pull_request.number }}'
+            });
+
+            if (200 == reviews.status) {
+              let approved = [];
+              for (let review of reviews.data) {
+                if ('APPROVED' == review.status) {
+                  approved.push(review);
+                }
+              }
+              console.debug(approved);
+            } else {
+              throw 'Failed to read reviews on Pull Request #${{ github.event.pull_request.number }}';
+            }
