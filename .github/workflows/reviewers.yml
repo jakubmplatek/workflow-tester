@@ -3,15 +3,15 @@ run-name: 'Manage Reviewers: ${{ github.event_name }}.${{ github.event.action }}
 on:
   pull_request:
     types:
-    - opened 
-    - synchronize
-    - ready_for_review
+      - ready_for_review
   pull_request_review:
 jobs:
   debugger:
     runs-on: ubuntu-latest
     steps:
       - name: Parse pull request
+        # don't process non-approving review events
+        if: ${{ ! ( 'pull_request_review' == github.event_name && 'APPROVED' != github.event.review.state ) }}
         uses: actions/github-script@v7
         with:
           script: |
