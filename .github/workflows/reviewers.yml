@@ -47,7 +47,7 @@ jobs:
 
             // load configured reviewers
 
-            const reviewers = ['okratochvil_pure']; // TODO
+            const reviewers = ['prevision-cloud']; // TODO
 
             // TODO: all below should iterate through approval stages
             // need to design the config file to implement that
