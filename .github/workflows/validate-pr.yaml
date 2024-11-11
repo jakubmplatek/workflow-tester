@@ -1,9 +1,10 @@
 name: Validate
 on:
   pull_request:
-    - opened
-    - reopened
-    - synchronize
+    types:
+      - opened
+      - reopened
+      - synchronize
 jobs:
   dummy:
     runs-on: ubuntu-latest
