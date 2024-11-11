@@ -36,6 +36,9 @@ jobs:
             // identify review scopes
             // for now, only labels are checked
             const scopes = Object.keys(config.scopes).filter(s => labels.map(l=>l.name).includes(s));
+            
+            // TODO: remove - hardcoded test value
+            scopes.push('demo');
 
             // if no scopes were identified, nothing to do
             // TODO: add a _default scope that would be used if no match is found
