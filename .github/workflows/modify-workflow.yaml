@@ -71,5 +71,4 @@ jobs:
             --head "${fbranch}" \
             --title "${title}" \
             --body-file body.md \
-            --label test \
             --draft
