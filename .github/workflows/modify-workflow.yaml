@@ -52,9 +52,15 @@ jobs:
 
           git add . && git commit -m "${title}"
           git push origin "${fbranch}:${fbranch}"
+      - name: generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: submit pull request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           echo '### SCI Test' > body.md
           echo '' >> body.md
