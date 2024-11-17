@@ -1,0 +1,13 @@
+name: Release to Production
+on:
+  push:
+    branches:
+      - main
+env:
+  modifyme: 'modified value'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: dummy
+        run: echo dummy
