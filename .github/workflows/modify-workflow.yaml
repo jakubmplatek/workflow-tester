@@ -1,0 +1,12 @@
+name: 'admin: register org'
+on:
+  push:
+    branches:
+      - actions-permissions
+jobs:
+  register-org:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install yq
+        run: |
+          which yq || snap install yq --channel=v3/stable
