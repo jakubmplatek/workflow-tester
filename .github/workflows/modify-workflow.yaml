@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           # create a branch
-          echo $-
+          set +e
           git fetch --no-tags --depth=1 origin "${fbranch}:${fbranch}" || not_found=$?
           if [[ -z "${not_found}" ]]; then
             echo '[WARNING]branch exists (forcing update)'
