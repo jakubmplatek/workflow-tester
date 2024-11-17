@@ -7,6 +7,10 @@ jobs:
   register-org:
     runs-on: ubuntu-latest
     steps:
-      - name: install yq
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: config git
         run: |
-          which yq || snap install yq --channel=v3/stable
+          git config --global --add safe.directory '*'
+          git config --global user.email 'git@prevision.cloud'
+          git config --global user.name 'PrevisionApp'
