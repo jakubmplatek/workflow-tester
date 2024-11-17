@@ -39,7 +39,7 @@ jobs:
 
           # test 1 - modify a copy to set test baseline
           # test 2 - modify in-place
-          case test_1 in
+          case test_2 in
             test_1)
               mkdir -p tmp/workflows
               cp .github/workflows/release.yaml tmp/workflows
