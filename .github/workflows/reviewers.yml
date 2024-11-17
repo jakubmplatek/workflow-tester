@@ -1,115 +1,22 @@
 name: Manage Reviewers
 on:
   pull_request:
-    types: ['labeled', 'ready_for_review']
+    types: 
+      - ready_for_review
+      - synchronize
   pull_request_review:
 jobs:
   request-review:
-    if: ${{ github.event.pull_request && ! ( github.event.pull_request.draft || ( 'pull_request_review' == github.event_name && 'APPROVED' != github.event.review.state ) ) }}
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
-      - name: config
-        id: config
-        run: |
-          if [ ! -e '.sci/approvals.json' ]; then
-            echo '>>>> SCI CONFIGURATION NOT FOUND'
-            echo 'approvals={}' >> $GITHUB_OUTPUT
-          else
-            echo "approvals=$(jq -rc '.' .sci/approvals.json)" >> $GITHUB_OUTPUT
-          fi
       - name: request reviews
         uses: actions/github-script@v7
         with:
           script: |
-            // read config
-            const config = JSON.parse(`${{ steps.config.outputs.approvals }}`);
-            if (!config.enabled) {
-              console.log('>>>> approvals logic disabled - goodbye');
-              return 0;
-            }
+            // hardcode reviewers config for testing
+            const identified = ['jakubmplatek', 'prevision-cloud'];
 
-            // read labels
-            const labels = JSON.parse(`${{ toJSON(github.event.pull_request.labels) }}`);
-
-            // identify review scopes
-            // for now, only labels are checked
-            const scopes = Object.keys(config.scopes).filter(s => labels.map(l=>l.name).includes(s));
-            
-            // TODO: remove - hardcoded test value
-            scopes.push('demo');
-
-            // if no scopes were identified, nothing to do
-            // TODO: add a _default scope that would be used if no match is found
-            if (!scopes.length) {
-              console.log(`[WARNING]no review scopes identified for pull request ${context.issue.number}`);
-              return 0;
-            }
-            
-            // get pull reviews and filter only the approving ones
-            
-            /* 
-            * NOTE: this will include the one submitted in this event (if any)
-            * so at this point we're event-type-agnostic
-            */
-            
-            const approvals = [];
-            const reviews = await github.rest.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-            if (200 != reviews.status) {
-                throw `Failed to read reviews on Pull Request #${context.issue.number}`;
-            }
-            for (let review of reviews.data) {
-              if ('APPROVED' == review.state) {
-                approvals.push(review);
-              }
-            }
-
-            // load configured reviewers and generate content of review request
-            
-            // currently requested on the pull request
-            const requested = JSON.parse(`${{ toJSON(github.event.pull_request.requested_reviewers) }}`);
-            // temp array for building the list for the review request callout
-            const identified = [];
-
-            for (let scope of scopes) {
-              const stages = config.scopes[scope];
-              for (let stage of Object.keys(stages).sort()) {
-                console.log(`>>>> analysing stage: ${scope}[${stage}]`);
-
-                // check if the configured reviewers already approved
-                const approved = stages[stage].filter(u => approvals.map(a=>a.user.login).includes(u));
-                if (approved.length) {
-                  console.log('>>>> stage already approved by:');
-                  console.log(approved);
-                } else {
-                  // no approvals found - stage identified
-                  console.log('>>>> checking pending review requests');
-                  
-                  // check if the configured reviewers are already requested
-                  /* 
-                  * NOTE: the orgs/ORG/teams/* endpoints are not available using github.token
-                  * so if any reviewers are already requested through a team,
-                  * the workflow will still request them explicitly
-                  */
-                  const matching = stages[stage].filter(u => requested.map(r=>r.login).includes(u));
-                  if (matching.length) {
-                    console.log('>>>> review already requested');
-                  } else {
-                    // none of the configured reviewers currently requested
-                    identified.push(...stages[stage]);
-                  }
-
-                  // no need to analyse further stages
-                  break;
-                }
-              }
-            }
-            // deduplicate and remove author
+            // rest of the logic is copied from the live workflow
             const reviewers = [...new Set(identified)];
             const authorIndex = reviewers.indexOf('${{ github.event.pull_request.user.login }}');
             if (-1 < authorIndex) {
@@ -119,7 +26,7 @@ jobs:
 
             if (!reviewers.length) {
               // in case the author was the only one left on the list
-              console.log(`[WARNING]no reviewers identified for pull request ${context.issue.number}`);
+              console.log(`>>>> no reviewers identified for pull request ${context.issue.number}`);
             } else {
               console.log('>>>> requesting reviews:');
               console.log(reviewers);
@@ -147,7 +54,7 @@ jobs:
               } catch (error) {
                 if (error.status && 422 == error.status) {
                   console.log('[WARNING]failed to submit review requests');
-                  console.log('>>>> ' + error.message);
+                  console.log('[WARNING]' + error.message);
                   console.log('>>>> request:');
                   // actual request copy doesn't provide much digestable info - remove it
                   delete error.request.request;
@@ -157,5 +64,4 @@ jobs:
                 }
               }
             }
-            // TODO: add a list of status codes to submit warnings through check_runs action
             return 0;

@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "scopes": {
-    "demo": {
+    "test": {
       "1": [
         "jakubmplatek",
         "prevision-cloud"
