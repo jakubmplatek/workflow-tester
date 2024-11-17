@@ -13,8 +13,16 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
       - name: config git
         run: |
           git config --global --add safe.directory '*'
@@ -52,12 +60,6 @@ jobs:
 
           git add . && git commit -m "${title}"
           git push origin "${fbranch}:${fbranch}"
-      - name: generate token
-        id: generate-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: submit pull request
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
