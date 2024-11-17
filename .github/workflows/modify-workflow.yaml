@@ -5,9 +5,13 @@ on:
       - actions-permissions
 env:
   fbranch: 'test'
+  title: 'workflow modified by github action'
 jobs:
   register-org:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -17,12 +21,12 @@ jobs:
           git config --global user.email 'git@prevision.cloud'
           git config --global user.name 'PrevisionApp'
       - name: make changes
-        shell: bash
         run: |
           # create a branch
           git fetch --no-tags --depth=1 origin "${fbranch}:${fbranch}" || not_found=$?
           if [[ -z "${not_found}" ]]; then
-            echo '[WARNING]branch exists (forcing update)'
+            echo '[WARNING]branch exists (reset)'
+            git push -d origin "${fbranch}" # to auto-close open pr
             git branch -f "${fbranch}" ${{ github.ref }}
             git push -f origin "${fbranch}:${fbranch}"
           else
@@ -46,5 +50,26 @@ jobs:
 
           yq -i '.env.modifyme = "modified value"' release.yaml
 
-          git add . && git commit -m 'workflow modified by github action'
+          git add . && git commit -m "${title}"
           git push origin "${fbranch}:${fbranch}"
+      - name: submit pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo '### SCI Test' > body.md
+          echo '' >> body.md
+          echo 'this pull request has been opened by automation' >> body.md
+          echo '' >> body.md
+          echo 'to complete the registration process, move the updated workflows from `tmp/workflows` to `.github/workflows` and squash' >> body.md
+          echo '' >> body.md
+          echo '' >> body.md
+          echo '_In case of any questions, deal with it_' >> body.md
+
+          # open pr
+          gh pr create \
+            --base "${{ github.ref }}" \
+            --head "${fbranch}" \
+            --title "${title}" \
+            --body-file body.md \
+            --label test \
+            --draft
