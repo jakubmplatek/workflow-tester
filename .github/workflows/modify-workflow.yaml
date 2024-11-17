@@ -20,12 +20,13 @@ jobs:
         shell: bash
         run: |
           # create a branch
-          set +e
           git fetch --no-tags --depth=1 origin "${fbranch}:${fbranch}" || not_found=$?
           if [[ -z "${not_found}" ]]; then
             echo '[WARNING]branch exists (forcing update)'
             git branch -f "${fbranch}" ${{ github.ref }}
             git push -f origin "${fbranch}:${fbranch}"
+          else
+            git branch "${fbranch}"
           fi
         
           git checkout "${fbranch}"
