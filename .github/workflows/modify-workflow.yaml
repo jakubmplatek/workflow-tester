@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - actions-permissions
+env:
+  fbranch: 'test'
 jobs:
   register-org:
     runs-on: ubuntu-latest
@@ -14,3 +16,34 @@ jobs:
           git config --global --add safe.directory '*'
           git config --global user.email 'git@prevision.cloud'
           git config --global user.name 'PrevisionApp'
+      - name: make changes
+        shell: bash
+        run: |
+          # create a branch
+          git fetch --no-tags --depth=1 origin "${fbranch}:${fbranch}" || not_found=$?
+          if [[ -z "${not_found}" ]]; then
+            echo '[WARNING]branch exists (forcing update anyway)'
+          fi
+
+          git branch -f "${fbranch}" main
+          git push -f origin "${fbranch}:${fbranch}"
+          
+          git checkout "${fbranch}"
+
+          # modify the dummy workflow
+
+          # test 1 - modify a copy to set test baseline
+          # test 2 - modify in-place
+          case test_1 in
+            test_1)
+              mkdir -p tmp/workflows
+              cp .github/workflows/release.yaml tmp/workflows
+              cd tmp/workflows
+              ;;
+            test_2) cd .github/workflows;;
+          esac
+
+          yq -i '.env.modifyme = "modified value"' release.yaml
+
+          git add . && git commit -m 'workflow modified by github action'
+          git push origin "${fbranch}:${fbranch}"
