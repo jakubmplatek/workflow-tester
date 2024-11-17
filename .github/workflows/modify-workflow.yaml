@@ -22,12 +22,11 @@ jobs:
           # create a branch
           git fetch --no-tags --depth=1 origin "${fbranch}:${fbranch}" || not_found=$?
           if [[ -z "${not_found}" ]]; then
-            echo '[WARNING]branch exists (forcing update anyway)'
+            echo '[WARNING]branch exists (forcing update)'
+            git branch -f "${fbranch}" ${{ github.ref }}
+            git push -f origin "${fbranch}:${fbranch}"
           fi
-
-          git branch -f "${fbranch}" main
-          git push -f origin "${fbranch}:${fbranch}"
-          
+        
           git checkout "${fbranch}"
 
           # modify the dummy workflow
