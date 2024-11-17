@@ -60,7 +60,8 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: submit pull request
         env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          #GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           echo '### SCI Test' > body.md
           echo '' >> body.md
