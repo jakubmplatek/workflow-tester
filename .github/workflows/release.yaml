@@ -4,7 +4,7 @@ on:
     branches:
       - main
 env:
-  modifyme: 'base value'
+  modifyme: 'modified value'
 jobs:
   release:
     runs-on: ubuntu-latest
