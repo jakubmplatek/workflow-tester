@@ -1,0 +1,4 @@
+name: SCI Review Manager Helper
+runs: 
+  using: node20
+  main: index.js
