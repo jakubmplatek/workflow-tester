@@ -5,6 +5,9 @@ on:
       - ready_for_review
       - synchronize
   pull_request_review:
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 jobs:
   request-review:
     runs-on: ubuntu-latest
