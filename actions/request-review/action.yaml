@@ -1,4 +1,7 @@
 name: SCI Review Manager Helper
+inputs:
+  github-token:
+    default: ${{ github.token }}
 runs: 
   using: node20
   main: index.js
