@@ -15,60 +15,11 @@ jobs:
         with:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
       - name: request reviews
-        uses: actions/github-script@v7
+        uses: ./actions/request-review
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
-          script: |
-            // hardcode reviewers config for testing
-            const identified = ['jakubmplatek', 'prevision-cloud'];
-
-            // rest of the logic is copied from the live workflow
-            const reviewers = [...new Set(identified)];
-            const authorIndex = reviewers.indexOf('${{ github.event.pull_request.user.login }}');
-            if (-1 < authorIndex) {
-              console.log('>>>> removing pull request author [${{ github.event.pull_request.user.login }}] from list of reviewers');
-              reviewers.splice(authorIndex, 1);
-            }
-
-            if (!reviewers.length) {
-              // in case the author was the only one left on the list
-              console.log(`>>>> no reviewers identified for pull request ${context.issue.number}`);
-            } else {
-              console.log('>>>> requesting reviews:');
-              console.log(reviewers);
-
-              try {
-                // request new reviewers
-                const response = await github.rest.pulls.requestReviewers({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: context.issue.number,
-                  reviewers: reviewers
-                });
-
-                if (201 == response.status) {
-                  // verify all users we requested were successfully added
-                  // as the api returns 201 to empty requests or non-existing users
-                  
-                  const missed = reviewers.filter(u => !response.data.requested_reviewers.map(r => r.login).includes(u));
-                  if (missed.length) {
-                    console.log('[WARNING]failed to request review from some users (possible misconfiguration)');
-                    console.log('>>>> missed reviewers:');
-                    console.log(missed);
-                  }
-                }
-              } catch (error) {
-                if (error.status && 422 == error.status) {
-                  console.log('[WARNING]failed to submit review requests');
-                  console.log('[WARNING]' + error.message);
-                  console.log('>>>> request:');
-                  // actual request copy doesn't provide much digestable info - remove it
-                  delete error.request.request;
-                  console.log(error.request);
-                } else {
-                  throw error;
-                }
-              }
-            }
-            return 0;
