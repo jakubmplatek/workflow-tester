@@ -31822,6 +31822,7 @@ async function run() {
 
   await octokit.rest.issues.addLabels({
     ...github.context.repo,
+    issue_number: github.context.issue.number,
     labels: labels
   });
 } 
