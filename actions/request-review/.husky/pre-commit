@@ -1,1 +1,4 @@
-npm run build && git update-index --again
+#!/bin/sh
+cd actions/request-review
+npm run build
+git update-index --again
