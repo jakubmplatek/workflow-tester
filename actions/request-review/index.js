@@ -7,7 +7,7 @@ async function run() {
 
   const labels = ['devops', 'demo'];
 
-  await github.rest.issues.addLabels({
+  await octokit.rest.issues.addLabels({
     ...github.context.repo,
     labels: labels
   });
