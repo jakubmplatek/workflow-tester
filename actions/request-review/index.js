@@ -10,6 +10,6 @@ async function run() {
   });
 
   console.log(pullRequest);
-}
+} 
 
 run();
