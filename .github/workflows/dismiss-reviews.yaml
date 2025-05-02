@@ -1,0 +1,43 @@
+name: Dismiss Pull Request Reviews
+description: dismiss all reviews on a closed unmerged pull request
+on:
+  pull_request:
+    types:
+      - closed
+jobs:
+  dismiss-reviews:
+    if: ${{ !github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const dismiss = [];
+            const reviews = await github.rest.pulls.listReviews({
+              ...context.repo,
+              pull_number: context.issue.number
+            });
+            if (200 != reviews.status) {
+              throw Error(`Failed to read reviews on Pull Request #${context.issue.number}`);
+            }
+            for (let review of reviews.data) {
+              if ('APPROVED' === review.state) {
+                dismiss.push(review);
+              }
+            }
+            if (!dismiss.length) {
+              console.log(`no approving reviews found for pull request #${context.issue.number}`);
+            }
+            else {
+              console.log(`dismissing ${dismiss.length} review(s) for pull request #${context.issue.number}`);
+              for (let review of dismiss) {
+                const response = await github.rest.pulls.dismissReview({
+                  ...context.repo,
+                  pull_number: context.issue.number,
+                  review_id: review.id,
+                  message: "pull request closed: approval dismissed"
+                });
+
+                console.debug(response);
+              }
+            }
