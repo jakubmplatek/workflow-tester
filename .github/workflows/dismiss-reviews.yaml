@@ -35,7 +35,8 @@ jobs:
                   ...context.repo,
                   pull_number: context.issue.number,
                   review_id: review.id,
-                  message: "pull request closed: approval dismissed"
+                  message: 'pull request closed: approval dismissed',
+                  event: 'DISMISS'
                 });
 
                 console.debug(response);
