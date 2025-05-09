@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "scopes": {
+    "test": {
+      "1": [
+        "jakubmplatek",
+        "prevision-cloud"
+      ]
+    }
+  }
+}
