@@ -1,0 +1,82 @@
+name: 'admin: register org'
+on:
+  push:
+    branches:
+      - actions-permissions
+env:
+  fbranch: 'test'
+  title: 'workflow modified by github action'
+jobs:
+  register-org:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: config git
+        run: |
+          git config --global --add safe.directory '*'
+          git config --global user.email 'git@prevision.cloud'
+          git config --global user.name 'PrevisionApp'
+      - name: make changes
+        run: |
+          # create a branch
+          git fetch --no-tags --depth=1 origin "${fbranch}:${fbranch}" || not_found=$?
+          if [[ -z "${not_found}" ]]; then
+            echo '[WARNING]branch exists (reset)'
+            git push -d origin "${fbranch}" # to auto-close open pr
+            git branch -f "${fbranch}" ${{ github.ref }}
+            git push -f origin "${fbranch}:${fbranch}"
+          else
+            git branch "${fbranch}"
+          fi
+        
+          git checkout "${fbranch}"
+
+          # modify the dummy workflow
+
+          # test 1 - modify a copy to set test baseline
+          # test 2 - modify in-place
+          case test_2 in
+            test_1)
+              mkdir -p tmp/workflows
+              cp .github/workflows/release.yaml tmp/workflows
+              cd tmp/workflows
+              ;;
+            test_2) cd .github/workflows;;
+          esac
+
+          yq -i '.env.modifyme = "modified value"' release.yaml
+
+          git add . && git commit -m "${title}"
+          git push origin "${fbranch}:${fbranch}"
+      - name: submit pull request
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          echo '### SCI Test' > body.md
+          echo '' >> body.md
+          echo 'this pull request has been opened by automation' >> body.md
+          echo '' >> body.md
+          echo 'to complete the registration process, move the updated workflows from `tmp/workflows` to `.github/workflows` and squash' >> body.md
+          echo '' >> body.md
+          echo '' >> body.md
+          echo '_In case of any questions, deal with it_' >> body.md
+
+          # open pr
+          gh pr create \
+            --base "${{ github.ref }}" \
+            --head "${fbranch}" \
+            --title "${title}" \
+            --body-file body.md \
+            --draft
